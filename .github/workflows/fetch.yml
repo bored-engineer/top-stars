@@ -1,0 +1,30 @@
+name: Fetch
+permissions:
+  contents: write
+on:
+  workflow_dispatch:
+jobs:
+  sitemaps:
+    runs-on: ubuntu-20.04
+    name: Fetch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch
+        run: ./stars.sh
+      - name: Generate Tag
+        id: tag
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - name: Create Release
+        run: |
+          gh release create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "${{ steps.tag.outputs.date }}" \
+            --notes "Action URL: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            "${{ steps.tag.outputs.date }}"
+      - name: Upload Artifacts
+        run: |
+          gh release upload \
+            --repo "$GITHUB_REPOSITORY" \
+            "${{ steps.tag.outputs.date }}" \
+            "stars.csv"
